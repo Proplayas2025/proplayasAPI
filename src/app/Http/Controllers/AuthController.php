@@ -140,7 +140,7 @@ class AuthController extends Controller
                 'token' => $newToken,
             ]);
         } catch (\Throwable $e) {
-            \Log::error('Error refreshing token: ' . $e->getMessage());
+            Log::error('Error refreshing token: ' . $e->getMessage());
             return ApiResponse::error('Could not refresh token.', 500);
         }
     }
