@@ -15,7 +15,7 @@
             }
 
             try {
-                let response = await fetch(`http://localhost:8080/api/invitations/${token}`);
+                let response = await fetch(`http://proplayas.local/api/invitations/${token}`);
                 let result = await response.json();
 
                 if (result.status === 200) {

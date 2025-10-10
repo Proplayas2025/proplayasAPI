@@ -20,15 +20,13 @@ WORKDIR /var/www/html
 # Copiar código fuente
 COPY ./src .
 
-# Instalar dependencias y generar archivos necesarios
-RUN composer install --no-dev --optimize-autoloader \
-    && php artisan key:generate \
-    && php artisan jwt:secret \
-    && php artisan storage:link
-
 # Permisos para carpetas necesarias
 RUN chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
+
+# Copiar script de entrypoint
+COPY ./docker/php/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Configuración personalizada de PHP
 COPY ./docker/php/php.ini /usr/local/etc/php/conf.d/php.ini
@@ -38,6 +36,10 @@ RUN echo "upload_max_filesize=20M" >> /usr/local/etc/php/conf.d/uploads.ini \
     && echo "memory_limit=512M" > /usr/local/etc/php/conf.d/memory-limit.ini
 
 EXPOSE 9000
+
+# Configurar entrypoint
+ENTRYPOINT ["entrypoint.sh"]
+CMD ["php-fpm"]
 
 
 # FROM php:8.2-fpm

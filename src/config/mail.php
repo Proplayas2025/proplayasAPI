@@ -44,6 +44,14 @@ return [
             'password' => env('MAIL_PASSWORD'),
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN'),
+            // Configuración SSL para desarrollo
+            'stream' => [
+                'ssl' => [
+                    'verify_peer' => env('MAIL_VERIFY_PEER', true),
+                    'verify_peer_name' => env('MAIL_VERIFY_PEER_NAME', true),
+                    'allow_self_signed' => env('MAIL_ALLOW_SELF_SIGNED', false),
+                ],
+            ],
         ],
 
         'ses' => [
