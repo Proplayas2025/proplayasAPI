@@ -1,3 +1,8 @@
+# Variables para archivos de Docker Compose y comando
+DOCKER_COMPOSE := docker compose
+DEV_FILE := docker-compose.dev.yml
+PROD_FILE := docker-compose.yml
+
 PHONY := help build up down restart logs logs-app logs-db logs-nginx shell shell-db clean migrate migrate-fresh seed fresh install composer-update config-clear cache-clear optimize test tinker key-generate jwt-secret permissions ps stats storage-link storage-check
 
 help: ## Mostrar ayuda
@@ -7,118 +12,118 @@ help: ## Mostrar ayuda
 
 # Production build (uses `docker-compose.yml`)
 build: ## Construir contenedores para producción (docker-compose.yml)
-	docker-compose -f docker-compose.yml build
+	$(DOCKER_COMPOSE) -f $(PROD_FILE) build
 
 # Development build (uses `docker-compose.dev.yml`)
 dev-build: ## Construir contenedores para desarrollo (docker-compose.dev.yml)
-	docker-compose -f docker-compose.dev.yml build
+	$(DOCKER_COMPOSE) -f $(DEV_FILE) build
 
 
 # Production: levantar con docker-compose.yml
 prod: ## Levantar stack de producción (docker-compose.yml)
-	docker-compose -f docker-compose.yml up -d
+	$(DOCKER_COMPOSE) -f $(PROD_FILE) up -d
 
 # Development: levantar con docker-compose.dev.yml
 dev: ## Levantar stack de desarrollo (docker-compose.dev.yml)
-	docker-compose -f docker-compose.dev.yml up -d
+	$(DOCKER_COMPOSE) -f $(DEV_FILE) up -d
 
 # Generic up (default to production)
 up: ## Iniciar los contenedores (alias a `prod`)
-	docker-compose -f docker-compose.yml up -d
+	$(DOCKER_COMPOSE) -f $(PROD_FILE) up -d
 
 
 down: ## Detener contenedores (producción)
-	docker-compose -f docker-compose.yml down
+	$(DOCKER_COMPOSE) -f $(PROD_FILE) down
 
 restart: ## Reiniciar los contenedores
-	docker-compose restart
+	$(DOCKER_COMPOSE) restart
 
 stop: ## Detener los contenedores sin eliminarlos
-	docker-compose stop
+	$(DOCKER_COMPOSE) stop
 
 start: ## Iniciar contenedores detenidos
-	docker-compose start
+	$(DOCKER_COMPOSE) start
 
 logs: ## Ver logs de todos los contenedores
-	docker-compose logs -f
+	$(DOCKER_COMPOSE) logs -f
 
 logs-app: ## Ver logs del contenedor PHP
-	docker-compose logs -f app
+	$(DOCKER_COMPOSE) logs -f app
 
 logs-db: ## Ver logs de la base de datos
-	docker-compose logs -f db
+	$(DOCKER_COMPOSE) logs -f db
 
 logs-nginx: ## Ver logs de Nginx
-	docker-compose logs -f webserver
+	$(DOCKER_COMPOSE) logs -f webserver
 
 shell: ## Entrar al contenedor PHP con bash
-	docker-compose exec app bash
+	$(DOCKER_COMPOSE) exec app bash
 
 shell-db: ## Entrar a MySQL
-	docker-compose exec db mysql -u proplayas_user -ppassword proplayas
+	$(DOCKER_COMPOSE) exec db mysql -u proplayas_user -ppassword proplayas
 
 
 # Clean only this project's stacks (both prod and dev) without touching other projects
 clean: ## Bajar y eliminar volúmenes de este proyecto (dev + prod)
-	docker-compose -p proplayas -f docker-compose.yml down -v --remove-orphans || true
-	docker-compose -p proplayas -f docker-compose.dev.yml down -v --remove-orphans || true
+	$(DOCKER_COMPOSE) -p proplayas -f $(PROD_FILE) down -v --remove-orphans || true
+	$(DOCKER_COMPOSE) -p proplayas -f $(DEV_FILE) down -v --remove-orphans || true
 
 migrate: ## Ejecutar migraciones
-	docker-compose exec app php artisan migrate
+	$(DOCKER_COMPOSE) exec app php artisan migrate
 
 migrate-fresh: ## Ejecutar migraciones desde cero (elimina todo)
-	docker-compose exec app php artisan migrate:fresh
+	$(DOCKER_COMPOSE) exec app php artisan migrate:fresh
 
 seed: ## Ejecutar seeders
-	docker-compose exec app php artisan db:seed
+	$(DOCKER_COMPOSE) exec app php artisan db:seed
 
 fresh: ## Migraciones frescas + seeders
-	docker-compose exec app php artisan migrate:fresh --seed
+	$(DOCKER_COMPOSE) exec app php artisan migrate:fresh --seed
 
 install: ## Instalar dependencias de Composer
-	docker-compose exec app composer install
+	$(DOCKER_COMPOSE) exec app composer install
 
 composer-update: ## Actualizar dependencias de Composer
-	docker-compose exec app composer update
+	$(DOCKER_COMPOSE) exec app composer update
 
 config-clear: ## Limpiar caché de configuración
-	docker-compose exec app php artisan config:clear
+	$(DOCKER_COMPOSE) exec app php artisan config:clear
 
 cache-clear: ## Limpiar todas las cachés
-	docker-compose exec app php artisan cache:clear
-	docker-compose exec app php artisan config:clear
-	docker-compose exec app php artisan route:clear
-	docker-compose exec app php artisan view:clear
+	$(DOCKER_COMPOSE) exec app php artisan cache:clear
+	$(DOCKER_COMPOSE) exec app php artisan config:clear
+	$(DOCKER_COMPOSE) exec app php artisan route:clear
+	$(DOCKER_COMPOSE) exec app php artisan view:clear
 
 optimize: ## Optimizar aplicación para producción
-	docker-compose exec app php artisan config:cache
-	docker-compose exec app php artisan route:cache
-	docker-compose exec app php artisan view:cache
+	$(DOCKER_COMPOSE) exec app php artisan config:cache
+	$(DOCKER_COMPOSE) exec app php artisan route:cache
+	$(DOCKER_COMPOSE) exec app php artisan view:cache
 
 test: ## Ejecutar tests
-	docker-compose exec app php artisan test
+	$(DOCKER_COMPOSE) exec app php artisan test
 
 tinker: ## Abrir Laravel Tinker
-	docker-compose exec app php artisan tinker
+	$(DOCKER_COMPOSE) exec app php artisan tinker
 
 key-generate: ## Generar APP_KEY
-	docker-compose exec app php artisan key:generate
+	$(DOCKER_COMPOSE) exec app php artisan key:generate
 
 jwt-secret: ## Generar JWT_SECRET
-	docker-compose exec app php artisan jwt:secret
+	$(DOCKER_COMPOSE) exec app php artisan jwt:secret
 
 permissions: ## Arreglar permisos de storage y cache
-	docker-compose exec app chmod -R 775 storage bootstrap/cache
-	docker-compose exec app chown -R www-data:www-data storage bootstrap/cache
+	$(DOCKER_COMPOSE) exec app chmod -R 775 storage bootstrap/cache
+	$(DOCKER_COMPOSE) exec app chown -R www-data:www-data storage bootstrap/cache
 
 ps: ## Ver estado de los contenedores
-	docker-compose ps
+	$(DOCKER_COMPOSE) ps
 
 stats: ## Ver uso de recursos de los contenedores
 	docker stats proplayas_php proplayas_db proplayas_nginx proplayas_mailhog
 
 storage-link: ## Crear enlace simbólico public/storage -> storage/app/public
-	docker-compose exec app php artisan storage:link
+	$(DOCKER_COMPOSE) exec app php artisan storage:link
 
 storage-check: ## Listar contenido de public/storage/uploads/profiles
-	docker-compose exec app ls -la public/storage/uploads/profiles || true
+	$(DOCKER_COMPOSE) exec app ls -la public/storage/uploads/profiles || true
