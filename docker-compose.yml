@@ -30,7 +30,7 @@ services:
       - ./src:/var/www/html
     working_dir: /var/www/html
     ports:
-      - "9000:9000"
+      - "127.0.0.1:9000:9000"
     depends_on:
       db:
         condition: service_healthy

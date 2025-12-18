@@ -47,5 +47,14 @@ fi
 
 echo "Laravel application initialized successfully!"
 
+# Iniciar el worker de colas en segundo plano
+php artisan queue:work --daemon --tries=3 --timeout=30 &
+
+# Iniciar el scheduler en segundo plano
+while true; do
+    php artisan schedule:run >> /dev/null 2>&1
+    sleep 60
+done &
+
 # Iniciar PHP-FPM
 exec "$@"

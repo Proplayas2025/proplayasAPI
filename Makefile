@@ -59,7 +59,7 @@ logs-nginx: ## Ver logs de Nginx
 shell: ## Entrar al contenedor PHP con bash
 	$(DOCKER_COMPOSE) exec app bash
 
-shell-db: ## Entrar a MySQL
+db: ## Entrar a MySQL
 	$(DOCKER_COMPOSE) exec db mysql -u proplayas_user -ppassword proplayas
 
 

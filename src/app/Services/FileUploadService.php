@@ -11,7 +11,7 @@ use Intervention\Image\Drivers\Gd\Driver;
 
 class FileUploadService
 {
-    public static function uploadImage(UploadedFile $image, string $folder, ?string $oldPath = null): string
+    public static function uploadImage(UploadedFile $image, string $folder, ?string $oldFilename = null): string
     {
         $filename = Str::uuid() . '.webp';
         $path = "uploads/{$folder}/{$filename}";
@@ -21,22 +21,24 @@ class FileUploadService
     
         Storage::disk('public')->put($path, $webp);
     
-        if ($oldPath) {
-            static::delete("uploads/{$folder}/" . basename($oldPath));
+        // Eliminar archivo antiguo si existe
+        if ($oldFilename && !filter_var($oldFilename, FILTER_VALIDATE_URL)) {
+            static::delete($oldFilename, $folder);
         }
     
         return $filename;
     }
 
-    public static function uploadFile(UploadedFile $file, string $folder, ?string $oldPath = null): string
+    public static function uploadFile(UploadedFile $file, string $folder, ?string $oldFilename = null): string
     {
         $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
         $path = "uploads/{$folder}/{$filename}";
     
         Storage::disk('public')->putFileAs("uploads/{$folder}", $file, $filename);
     
-        if ($oldPath) {
-            static::delete("uploads/{$folder}/" . basename($oldPath));
+        // Eliminar archivo antiguo si existe
+        if ($oldFilename && !filter_var($oldFilename, FILTER_VALIDATE_URL)) {
+            static::delete($oldFilename, $folder);
         }
     
         return $filename;
@@ -44,8 +46,20 @@ class FileUploadService
 
     public static function delete(?string $filename, string $folder = ''): void
     {
-        if (!$filename || !$folder) return;
-        $path = "uploads/{$folder}/{$filename}";
+        if (!$filename) return;
+        
+        // Si es una URL externa, no hacer nada
+        if (filter_var($filename, FILTER_VALIDATE_URL)) return;
+        
+        // Si no se especifica folder, intentar inferirlo o usar path completo
+        if (!$folder) {
+            // Si el filename contiene la estructura uploads/..., usarlo directamente
+            $path = str_starts_with($filename, 'uploads/') ? $filename : "uploads/{$filename}";
+        } else {
+            // Construir el path con folder
+            $path = "uploads/{$folder}/" . basename($filename);
+        }
+        
         Storage::disk('public')->delete($path);
     }    
 }

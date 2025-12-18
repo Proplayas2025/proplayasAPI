@@ -173,8 +173,10 @@ abstract class BaseContentController extends Controller
             return ApiResponse::unauthorized("No autorizado");
         }
 
-        FileUploadService::delete($item->cover_image);
-        FileUploadService::delete($item->file_path);
+        // Eliminar archivos asociados
+        FileUploadService::delete($item->cover_image, 'covers');
+        FileUploadService::delete($item->file_path, 'docs');
+        
         $item->delete();
 
         return ApiResponse::success("{$this->type} eliminado correctamente");

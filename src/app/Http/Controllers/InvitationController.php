@@ -76,14 +76,14 @@ class InvitationController extends Controller
             'expiration_date' => now()->addDays(7)
         ]);
 
-        // Enviar email
+        // Enviar email de forma asíncrona
         $url = env('APP_FRONTEND_URL', 'http://localhost:8080') . "/validate-invitation?token=$token";
         $body = "Hola {$request->name},<br>Has sido invitado a ProPlayas como Administrador.<br>
                 Por favor regístrate aquí: <a href='$url'>$url</a>";
 
-        MailService::sendMail($request->email, 'Invitación a ProPlayas', $body);
+        \App\Jobs\SendInvitationEmail::dispatch($request->email, 'Invitación a ProPlayas', $body);
 
-        return ApiResponse::created('Invitación enviada con éxito', $invitation);
+        return ApiResponse::created('Invitación enviada con éxito. El correo llegará en breve.', $invitation);
     }
 
 
@@ -103,8 +103,8 @@ class InvitationController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:invitations',
-            'node_type' => 'required|string|max:255'
+            'email' => 'required|email|unique:invitations,email',
+            'node_type' => 'required|in:sociedad_civil,empresarial,cientifico,funcion_publica,individual'
         ]);
 
          // Crear objeto con los datos de la invitación
@@ -136,9 +136,9 @@ class InvitationController extends Controller
                 <br>ProPlayas te ha enviado una invitación para crear un Nodo y registrarte como su Líder.<br>
                  Por favor regístrate aquí: <a href='$url'>$url</a>";
 
-        MailService::sendMail($request->email, 'Invitación a ProPlayas', $body);
+        \App\Jobs\SendInvitationEmail::dispatch($request->email, 'Invitación a ProPlayas', $body);
 
-        return ApiResponse::created('Invitación enviada con éxito', $invitation);
+        return ApiResponse::created('Invitación enviada con éxito. El correo llegará en breve.', $invitation);
     }
 
 
@@ -194,14 +194,14 @@ class InvitationController extends Controller
             'expiration_date' => now()->addDays(7)
         ]);
 
-        // Enviar email de invitación al usuario
+        // Enviar email de invitación al usuario de forma asíncrona
         $url = env('APP_FRONTEND_URL', 'http://localhost:8080') . "/validate-invitation?token=$token";
         $body = "Hola {$request->name},<br>Has sido invitado a ProPlayas como Miembro de Nodo.<br>
                  Por favor regístrate aquí: <a href='$url'>$url</a>";
 
-        MailService::sendMail($request->email, 'Invitación a ProPlayas', $body);
+        \App\Jobs\SendInvitationEmail::dispatch($request->email, 'Invitación a ProPlayas', $body);
 
-        return ApiResponse::created('Invitación enviada con éxito', $invitation);
+        return ApiResponse::created('Invitación enviada con éxito. El correo llegará en breve.', $invitation);
     }
 
 
@@ -226,7 +226,8 @@ class InvitationController extends Controller
     /** Aceptar una invitación y registrar usuario y nodo */
     public function acceptInvitation(Request $request)
     {
-        $request->validate([
+        try {
+            $request->validate([
             'token' => 'required|string',
             'password' => 'required|string|min:8',
             'username' => 'string|nullable|max:255',
@@ -366,7 +367,7 @@ class InvitationController extends Controller
                 'members_count' => 1, // El líder es el primer miembro
                 'id' => $request->id ?? null,
                 'social_media' => $request->social_media_node ? json_decode(json_encode($request->social_media_node), true) : null,
-                'memorandum' => $request->$nodeMemorandum ?? null,
+                'memorandum' => $nodeMemorandum ?? null,
                 'status' => 'activo'
             ]);
     
@@ -417,5 +418,20 @@ class InvitationController extends Controller
             'user' => $user->refresh(),
             'node' => $node
         ]);
+        
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Error de validación en acceptInvitation', ['errors' => $e->errors()]);
+            return ApiResponse::error('Error de validación', 422, ['errors' => $e->errors()]);
+        } catch (\Exception $e) {
+            Log::error('Error en acceptInvitation: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return ApiResponse::error('Error inesperado al procesar la invitación', 500, [
+                'debug' => $e->getMessage(),
+                'line' => $e->getLine()
+            ]);
+        }
     }
 }
