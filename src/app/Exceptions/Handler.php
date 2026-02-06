@@ -104,9 +104,10 @@ class Handler extends ExceptionHandler
 
         // 🔧 Para errores inesperados
         if (!($exception instanceof HttpExceptionInterface)) {
-            return ApiResponse::serverError(
-                'Error inesperado en el servidor', 500,
-                app()->environment('local') ? $exception->getMessage() : null
+            return ApiResponse::error(
+                'Error inesperado en el servidor',
+                500,
+                app()->environment('local') ? ['error' => $exception->getMessage()] : []
             );
         }
 
