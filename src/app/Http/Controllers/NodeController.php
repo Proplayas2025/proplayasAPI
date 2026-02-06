@@ -52,14 +52,17 @@ class NodeController extends Controller
             });
         }
 
-        $perPage = 20;
+        $perPage = 50;
         $nodes = $query->orderBy('id')->paginate($perPage)->appends($request->query());
 
-        return ApiResponse::success('Lista de nodos obtenida', $nodes->items(), [
-            'current_page' => $nodes->currentPage(),
-            'per_page' => $nodes->perPage(),
-            'total' => $nodes->total(),
-            'last_page' => $nodes->lastPage(),
+        return ApiResponse::success('Lista de nodos obtenida', [
+            'data' => $nodes->items(),
+            'pagination' => [
+                'current_page' => $nodes->currentPage(),
+                'per_page' => $nodes->perPage(),
+                'total' => $nodes->total(),
+                'last_page' => $nodes->lastPage(),
+            ]
         ]);
     }
 

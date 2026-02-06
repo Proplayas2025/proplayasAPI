@@ -2,6 +2,7 @@ version: '3.8'
 services:
   db:
     image: mysql:8
+    command: ["mysqld", "--local-infile=1"]
     container_name: proplayas_db
     restart: unless-stopped
     environment:
